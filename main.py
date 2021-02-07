@@ -3,31 +3,36 @@ import math
 ### --------------------------
 # this takes the .mv3d file and returns a dictionary where each key 
 # has a list of all coordinates that make up the line
-cwd = os.getcwd()
-
-with open(cwd + '/resources/M37-t2.a00.rec.scl3.Spatial-Graph.mv3d', 'r') as file:
-
-    lines = []
-    for line in file:
-        try:
-            point_num = int(line[0])
-            lines.append(line.split())
-        except ValueError:
-            continue
-
-# print(lines)            
-coords = {}
-for sub in lines:
-    key = sub[0]
-    if key not in coords: 
-        coords[key] = []
-    coords[key].append(sub[1:-1])
-
-### -----------------------------
 
 
-# farthest points algorithm (naive approach) + 3D
+def construct_dict_from_mv3d(file_path):
+    with open(file_path, 'r') as file:
+        lines = []
+        for line in file:
+            try:
+                point_num = int(line[0])
+                lines.append(line.split())
+            except ValueError:
+                continue
+
+    coords = {}
+    for sub in lines:
+        key = sub[0]
+        if key not in coords: 
+            coords[key] = []
+        coords[key].append(sub[1:-1])
+
+    return coords
+
+
+
 def furthest_points(arr):
+    """
+    Input: List of x,y,z coords.    
+    Output: List of the 2 furthest away points' coordinates. I.E endpoints.
+    
+    Farthest points algorithm (naive approach) + 3D
+    """
     dist = 0
     for i in range(len(arr)):
         for j in range(len(arr)):
@@ -42,5 +47,66 @@ def furthest_points(arr):
                 i2 = j 
     return [arr[i1], arr[i2]]
 
+def connected_dict_gen(d):
+    """
+    Input: Dict with the endpoints of each branch
+    Output: Dict of each branch number with values corresponding to a list of other branches connected to said branch.
+    """
 
-print(furthest_points(coords['0']))
+    # Try naive approach (cycle through everything) and if too slow find faster method.
+    
+    # Cycles through bracnhes and geographically determiebns if they are connected (Naive)
+    connected_dict = {}
+    branches = list(d.keys())
+    for branch1 in branches:
+        connected_points = []
+        for branch2 in branches:
+            if branch1 != branch2:
+                start1, end1 = d[branch1]
+                start2, end2 = d[branch2]
+                start1 = [float(el) for el in start1]
+                start2 = [float(el) for el in start2]
+                end1 = [float(el) for el in end1]
+                end2 = [float(el) for el in end2]
+                if start1 == start2 or start1 == end2 or start2 == start1 or start2 == end1:
+                    connected_points.append(branch2)
+        connected_dict[branch1] = connected_points
+
+    return connected_dict
+
+
+def get_root_geometrically(furthest_points):
+    """
+    Input: dictionary with the endpoints of each branch
+    Output: the branch number that corresponds to the trachea (str)
+    """
+    # trying minimum z
+    min_z = 10000000
+    trachea = ''
+    for key in furthest_points.keys():
+        endpoints = furthest_points[key]
+        z1, z2 = float(endpoints[0][2]), float(endpoints[1][2])
+        if z1 < min_z or z2 < min_z:
+            min_z = min(z1, z2)
+            trachea = key
+    return trachea
+
+
+
+
+if __name__ == "__main__":
+
+    cwd = os.getcwd()
+    path_to_mv3d = cwd + '/resources/M37-t2.a00.rec.scl3.Spatial-Graph.mv3d'
+    coords = construct_dict_from_mv3d(path_to_mv3d)
+
+    furthest_points_coords_dict = {}
+    for key in coords.keys():
+        points = furthest_points(coords[key])
+        if key not in furthest_points_coords_dict:
+            furthest_points_coords_dict[key] = points
+    
+    # print(list(furthest_points_coords_dict.values())[0])
+    print(get_root_geometrically(furthest_points_coords_dict))
+
+
