@@ -19,7 +19,7 @@ Once run, the program writes a new excel file with all anatomical labels specifi
 ## Future Improvements
 
 This project is able to be continuously improved into the future. Some main capabilities intended to be expanded upon are as follows:
-- Machine Learning approach to the anatomical leblling: will improve the accuracy, detail and scalability of this application
+- Machine Learning approach to the anatomical labelling: will improve the accuracy, detail and scalability of this application
 - Output file writing and handling:
     - Specify an output directory and filename
-    - Cascade multpiple runs to the same output excel file
+    - Cascade multiple runs to the same output excel file
